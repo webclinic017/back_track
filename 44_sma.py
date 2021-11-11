@@ -4,7 +4,6 @@ import pandas
 import sqlite3
 from analyzers.trade_statistics import BasicTradeStats
 from indicators.adx import AverageDirectionalMovementIndex as adx
-from datetime import time, datetime, timedelta, date
 
 
 class FourtyFourSma(backtrader.Strategy):

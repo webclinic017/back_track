@@ -71,41 +71,69 @@ class DmiCrossOver(backtrader.Strategy):
             if self.order:
                 return
 
-            try:
-                # buy long
-                if (
-                    not self.position
-                    and not self.bought_today
-                    and not self.sold_today
-                    and self.data.close[0] > self.ema[0]
-                    and self.crossover > 0
-                ):
-                    self.order = self.buy()
-                    self.long_stoploss = self.swingline.swingline[0]
-                    self.p.buy_price = self.data.close[0]
-                    self.bought_today = True
+            # buy long
+            if (
+                not self.position
+                and not self.bought_today
+                and not self.sold_today
+                and self.data.close[0] > self.ema[0]
+                and self.crossover > 0
+            ):
+                self.order = self.buy()
+                self.long_stoploss = 0  # nearest swing low
+                self.p.buy_price = self.data.close[0]
+                self.bought_today = True
 
-                # target
-
+            # target
+            elif (
+                self.position
+                and self.bought_today
+                and not self.sold_today
+                and self.data.close[0] > self.long_target
+            ):
+                self.order = self.close()
+                self.bought_today = False
                 # stoploss
-                # nearest swing low
+            elif (
+                self.position
+                and self.bought_today
+                and not self.sold_today
+                and self.data.close < self.long_stoploss
+            ):
+                self.order = self.close()
+                self.bought_today = False
 
-            except:
-                # short sell
-                if (
-                    not self.position
-                    and not self.bought_today
-                    and not self.sold_today
-                    and self.data.close[0] < self.ema[0]
-                    and self.crossover < 0
-                ):
-                    self.order = self.sell()
-                    self.sold_today = True
+            # short sell
+            if (
+                not self.position
+                and not self.bought_today
+                and not self.sold_today
+                and self.data.close[0] < self.ema[0]
+                and self.crossover < 0
+            ):
+                self.order = self.sell()
+                self.short_stoploss = 0  # nearest swing high
+                self.sold_today = True
 
-                # target
+            # target
+            elif (
+                self.position
+                and not self.bought_today
+                and self.sold_today
+                and self.data.close[0] > self.short_target
+            ):
+                self.order = self.close()
+                self.sold_today = False
 
-                # stoploss
-                # nearest swing high
+            # stoploss
+            elif (
+                self.position
+                and self.bought_today
+                and not self.sold_today
+                and self.data.close > self.long_stoploss
+            ):
+                self.order = self.close()
+                self.sold_today = False
 
     def start(self):
         self.opening_amount = self.broker.getvalue()

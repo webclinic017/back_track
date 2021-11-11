@@ -93,7 +93,7 @@ class EngulfingPattern(backtrader.Strategy):
             self.log(f"=== LONG BUY TARGET HIT ===")
 
         # stoploss
-        # stoploss will be low of the selling candle and below SMA 200
+        # stoploss will be low of the selling candle
         elif (
             self.position
             and self.bought_today
@@ -138,7 +138,7 @@ class EngulfingPattern(backtrader.Strategy):
             self.log(f"=== SHORT SELL TARGET HIT ===")
 
         # stoploss
-        # stoploss will be high of the selling candle and above SMA 200
+        # stoploss will be high of the selling candle
         elif (
             self.position
             and not self.bought_today

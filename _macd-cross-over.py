@@ -107,7 +107,6 @@ class MacdCrossOver(backtrader.Strategy):
             self.bought_today = False
 
         # stoploss
-        # nearest swing low
         elif (
             self.position
             and self.bought_today
@@ -142,7 +141,6 @@ class MacdCrossOver(backtrader.Strategy):
             self.sold_today = False
 
         # stoploss
-        # nearest swing high
         elif (
             self.position
             and self.bought_today

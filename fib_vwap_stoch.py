@@ -2,7 +2,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import backtrader
 import pandas
 import sqlite3
-from datetime import time
 from analyzers.trade_statistics import BasicTradeStats
 from indicators.pivot import FibonacciPivotPoint
 from indicators.vwap import VolumeWeightedAveragePrice
