@@ -78,21 +78,7 @@ class FourtyFourSma(backtrader.Strategy):
         if (
             not self.position
             and not self.bought_today
-            and not self.sold_today
-            and self.data.close[0] > self.sma[0]
-            and self.data.close[0] > self.sma_long
-            and (
-                self.data.close[0] == self.data.high[0]
-                or self.data.high[0] == self.data.open[0]
-                or (
-                    self.data.high[0] == self.data.close[0]
-                    and self.data.open[0] == self.data.low[0]
-                )
-                or (self.data.close[0] > self.data.open[0])
-            )
-            and not self.sold_today
-            and self.crossover > 0
-        ):
+            and not self.sold_today):
             self.order = self.buy()
             self.long_stoploss = self.data.low[0]  # stoploss value
             self.bought_today = True
@@ -127,16 +113,6 @@ class FourtyFourSma(backtrader.Strategy):
             not self.position
             and not self.bought_today
             and not self.sold_today
-            and self.data.close[0] < self.sma_long
-            and (
-                (self.data.close[0] == self.data.high[0])
-                or (
-                    self.data.high[0] == self.data.open[0]
-                    and self.data.close[0] == self.data.low[0]
-                    or (self.data.open[0] > self.data.close[0])
-                )
-            )
-            and self.crossover < 0
         ):
             self.order = self.sell()
             self.short_stoploss = self.data.high[0]  # stoploss value
