@@ -15,12 +15,8 @@ class FiveStarRSI(backtrader.Strategy):
         self.order = None
         self.bought_today = False
         self.sold_today = False
-        self.buying_price = 0
-        self.selling_price = 0
         self.long_stoploss = 0
         self.short_stoploss = 0
-        self.long_target = 0
-        self.short_target = 0
         self.rsi = backtrader.indicators.RSI(
             self.data, period=14, upperband=60, lowerband=40, plot=True
         )
@@ -45,17 +41,9 @@ class FiveStarRSI(backtrader.Strategy):
             order_details = f"{order.executed.price}, Cost: {order.executed.value}, Commision: {order.executed.comm}"
 
             if order.isbuy():
-                self.buying_price = order.executed.price + order.executed.comm
-                self.long_target = self.buying_price + (
-                    (self.buying_price - self.long_stoploss) * 1.5
-                )
                 self.log(f"*** BUY EXECUTED, Price: {order_details} ***")
 
             elif order.issell():
-                self.selling_price = order.executed.price - order.executed.comm
-                self.short_target = self.selling_price - (
-                    (self.short_stoploss - self.selling_price) * 1.5
-                )
                 self.log(f"*** SELL EXECUTED, Price: {order_details} ***")
 
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
@@ -167,9 +155,9 @@ if __name__ == "__main__":
     database_path_five_minute = "./databases/app-minute-five.db"
 
     # conn = sqlite3.connect(database_path_one_minute)
-    conn = sqlite3.connect(database_path_fifteen_minute)
+    #conn = sqlite3.connect(database_path_fifteen_minute)
     # conn = sqlite3.connect(database_path_crypto)
-    # conn = sqlite3.connect(database_path_five_minute)
+    conn = sqlite3.connect(database_path_five_minute)
 
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
