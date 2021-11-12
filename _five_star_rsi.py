@@ -22,20 +22,14 @@ class FourtyFourSma(backtrader.Strategy):
         self.short_stoploss = 0
         self.long_target = 0
         self.short_target = 0
-        self.sma_high = backtrader.indicators.SimpleMovingAverage(
-            self.data.high, period=self.p.period, plot=True
+        self.rsi = backtrader.indicators.RSI(
+            self.data, period=14, upperband=60, lowerband=40, plot=True
         )
-        self.sma = backtrader.indicators.SimpleMovingAverage(
-            self.data, period=self.p.period, plot=True
+        self.rsi_weekly = backtrader.indicators.RSI(
+            self.data, period=7, upperband=60, lowerband=40, plot=True
         )
-        self.sma_low = backtrader.indicators.SimpleMovingAverage(
-            self.data.low, period=self.p.period, plot=True
-        )
-        self.sma_long = backtrader.indicators.SimpleMovingAverage(
-            self.data, period=self.p.sma_long, plot=True
-        )
-        self.crossover = backtrader.indicators.CrossOver(
-            self.data, self.sma_high, plot=True
+        self.rsi_monthly = backtrader.indicators.RSI(
+            self.data, period=30, upperband=60, lowerband=40, plot=True
         )
 
     def log(self, txt, dt=None):
@@ -78,7 +72,12 @@ class FourtyFourSma(backtrader.Strategy):
         if (
             not self.position
             and not self.bought_today
-            and not self.sold_today):
+            and not self.sold_today
+            and self.data.close[0] > self.data.open[0]
+            and self.rsi_weekly > 60
+            and self.rsi_monthly > 60
+            and self.rsi > 40
+        ):
             self.order = self.buy()
             self.long_stoploss = self.data.low[0]  # stoploss value
             self.bought_today = True
@@ -90,7 +89,7 @@ class FourtyFourSma(backtrader.Strategy):
             self.position
             and self.bought_today
             and not self.sold_today
-            and self.data.close[0] > self.long_target
+            and self.rsi > 40
         ):
             self.order = self.close()
             self.bought_today = False
@@ -103,6 +102,7 @@ class FourtyFourSma(backtrader.Strategy):
             and self.bought_today
             and self.data.close[0] < self.long_stoploss
             and not self.sold_today
+            and self.data.close[0] < self.long_stoploss
         ):
             self.order = self.close()
             self.bought_today = False
@@ -113,6 +113,9 @@ class FourtyFourSma(backtrader.Strategy):
             not self.position
             and not self.bought_today
             and not self.sold_today
+            and self.rsi_weekly < 40
+            and self.rsi_monthly < 40
+            and self.rsi > 60
         ):
             self.order = self.sell()
             self.short_stoploss = self.data.high[0]  # stoploss value
@@ -125,7 +128,7 @@ class FourtyFourSma(backtrader.Strategy):
             self.position
             and not self.bought_today
             and self.sold_today
-            and self.data.close[0] < self.short_target
+            and self.rsi < 40
         ):
             self.order = self.close()
             self.sold_today = False
