@@ -3,10 +3,9 @@ import backtrader
 import pandas
 import sqlite3
 from analyzers.trade_statistics import BasicTradeStats
-from indicators.adx import AverageDirectionalMovementIndex as adx
 
 
-class FourtyFourSma(backtrader.Strategy):
+class FiveStarRSI(backtrader.Strategy):
     params = dict(
         period=44,
         sma_long=200,
@@ -206,7 +205,7 @@ if __name__ == "__main__":
 
         data = backtrader.feeds.PandasData(dataname=dataframe)
         cerebro.adddata(data)
-        cerebro.addstrategy(FourtyFourSma)
+        cerebro.addstrategy(FiveStarRSI)
 
         # strats = cerebro.optstrategy(OpeningRangeBreakout, num_opening_bars=[15, 30, 60])
         cerebro.addanalyzer(BasicTradeStats)
