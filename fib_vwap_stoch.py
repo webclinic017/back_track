@@ -60,6 +60,9 @@ class OpenHigh_OpenLow(backtrader.Strategy):
             return
 
         # long buy
+        # cmp should be just above pivots
+        # cmp should be just above vwap
+        # stoch fastk > stoch fastd
         if (
             not self.position
             and not self.bought_today
@@ -80,6 +83,7 @@ class OpenHigh_OpenLow(backtrader.Strategy):
             and self.stochastic_rsi.fastk > self.stochastic_rsi.fastd
         ):
             self.order = self.buy()
+            # below previews candle low and vwap(which ever is low)
             if self.data.low[-1] < self.vwap[-1]:
                 self.long_stoploss = self.data.low[-1]
             elif self.vwap[-1] < self.data.low[-1]:
@@ -88,6 +92,7 @@ class OpenHigh_OpenLow(backtrader.Strategy):
             self.log(f"=== LONG BUY EXECUTED ===")
 
         # target
+        # RRR: 1.5:1
         elif (
             self.position
             and self.bought_today

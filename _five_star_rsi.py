@@ -76,7 +76,7 @@ class FiveStarRSI(backtrader.Strategy):
             self.position
             and self.bought_today
             and not self.sold_today
-            and self.rsi > 40
+            and self.rsi >= 60
         ):
             self.order = self.close()
             self.bought_today = False
@@ -102,7 +102,8 @@ class FiveStarRSI(backtrader.Strategy):
             and not self.sold_today
             and self.rsi_weekly < 40
             and self.rsi_monthly < 40
-            and self.rsi > 60
+            and self.rsi < 60
+            and self.rsi > 40
         ):
             self.order = self.sell()
             self.short_stoploss = self.data.high[0]  # stoploss value
@@ -155,7 +156,7 @@ if __name__ == "__main__":
     database_path_five_minute = "./databases/app-minute-five.db"
 
     # conn = sqlite3.connect(database_path_one_minute)
-    #conn = sqlite3.connect(database_path_fifteen_minute)
+    # conn = sqlite3.connect(database_path_fifteen_minute)
     # conn = sqlite3.connect(database_path_crypto)
     conn = sqlite3.connect(database_path_five_minute)
 

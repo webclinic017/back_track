@@ -7,7 +7,7 @@ from indicators.dmi import DirectionalMovementIndex
 from analyzers.trade_statistics import BasicTradeStats
 
 
-class SupertrendEMA(backtrader.Strategy):
+class SupertrendDmaEma(backtrader.Strategy):
     params = dict(
         period=30,
         fast=13,
@@ -204,7 +204,7 @@ if __name__ == "__main__":
 
         data = backtrader.feeds.PandasData(dataname=dataframe)
         cerebro.adddata(data)
-        cerebro.addstrategy(SupertrendEMA)
+        cerebro.addstrategy(SupertrendDmaEma)
         cerebro.addanalyzer(BasicTradeStats)
 
         # strats = cerebro.optstrategy(OpeningRangeBreakout, num_opening_bars=[15, 30, 60])
