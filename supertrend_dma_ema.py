@@ -69,7 +69,11 @@ class SupertrendDmaEma(backtrader.Strategy):
         if self.order:
             return
 
-        # long buy
+        # long buy.
+        # close price should be above 200 EMA.
+        # Super trend should be green (above trend line).
+        # +DI should cross -DI from below.
+        # candle formed should be a green candle.
         if (
             not self.position
             and not self.bought_today
@@ -84,7 +88,8 @@ class SupertrendDmaEma(backtrader.Strategy):
             self.bought_today = True
             self.log(f"=== LONG BUY EXECUTED ===")
 
-        # target
+        # target.
+        # RRR: 1.5:1.
         elif (
             self.position
             and self.bought_today
@@ -95,7 +100,8 @@ class SupertrendDmaEma(backtrader.Strategy):
             self.bought_today = False
             self.log(f"=== LONG BUY TARGET HIT | WINNER ===")
 
-        # stoploss
+        # stoploss.
+        # below the supertrend.
         elif (
             self.position
             and self.bought_today
@@ -106,7 +112,11 @@ class SupertrendDmaEma(backtrader.Strategy):
             self.bought_today = False
             self.log(f"=== LONG BUY STOPLOSS HIT | LOSER ===")
 
-        # short sell
+        # short sell.
+        # close price should be below 200 EMA.
+        # Super trend should be red.
+        # -DI should cross +DI from below.
+        # candle formed should be red candle.
         if (
             not self.position
             and not self.bought_today
@@ -134,6 +144,7 @@ class SupertrendDmaEma(backtrader.Strategy):
             self.log(f"=== SHORT SELL TARGET HIT | WINNER ===")
 
         # stoploss
+        # above the supertrend
         elif (
             self.position
             and not self.bought_today

@@ -7,13 +7,7 @@ from analyzers.trade_statistics import BasicTradeStats
 
 
 class Supertrend(backtrader.Strategy):
-    params = dict(
-        period=30,
-        fast=13,
-        slow=48,
-        long=200,
-        ema=200,
-    )
+    params = dict(ema=200)
 
     def __init__(self):
         self.order = None
