@@ -13,7 +13,7 @@ class FibonacciPivotPoint(backtrader.Indicator):
         ("level2", 0.618),
         ("level3", 1.0),
     )
-    
+
     def __init__(self):
         o = self.data.open
         h = self.data.high  # current high

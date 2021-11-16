@@ -33,7 +33,9 @@ class RsiCrossOver(backtrader.Strategy):
         )
 
         self.ema = backtrader.indicators.EMA(period=self.p.ema, plot=True)
-        self.crossover = backtrader.ind.CrossOver(backtrader.ind.RSI(), 50.0, plot=True)
+        self.crossover = backtrader.ind.CrossOver(backtrader.ind.RSI(),
+                                                  50.0,
+                                                  plot=True)
         self.swingline = SwingLine(self.data, plot=True)
 
     def log(self, txt, dt=None):
@@ -54,15 +56,13 @@ class RsiCrossOver(backtrader.Strategy):
             if order.isbuy():
                 self.p.buying_price = order.executed.price + order.executed.comm
                 self.p.long_target = self.p.buying_price + (
-                    (self.p.buying_price - self.p.long_stoploss) * 1.5
-                )
+                    (self.p.buying_price - self.p.long_stoploss) * 1.5)
                 self.log(f"BUY EXECUTED, {order_details}")
 
             elif order.issell():
                 self.selling_price = order.executed.price - order.executed.comm
                 self.short_target = self.selling_price - (
-                    (self.short_stoploss - self.selling_price) * 1.5
-                )
+                    (self.short_stoploss - self.selling_price) * 1.5)
                 self.log(f"*** SELL EXECUTED, Price: {order_details} ***")
 
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
@@ -76,73 +76,48 @@ class RsiCrossOver(backtrader.Strategy):
             return
 
         # buy long
-        if (
-            not self.position
-            and not self.bought_today
-            and not self.sold_today
-            and self.data.close[0] > self.ema[0]
-            and self.crossover[0] > 0
-        ):
+        if (not self.position and not self.bought_today and not self.sold_today
+                and self.data.close[0] > self.ema[0]
+                and self.crossover[0] > 0):
             self.order = self.buy()
             self.long_stoploss = 0  # nearest swing high
             self.bought_today = True
 
         # target
         # 1.5:1
-        elif (
-            self.position
-            and self.bought_today
-            and not self.sold_today
-            and self.data.close[0] > self.long_target
-        ):
+        elif (self.position and self.bought_today and not self.sold_today
+              and self.data.close[0] > self.long_target):
             self.order = self.close()
             self.bought_today = False
 
         # stoploss
         # nearest swing low
-        elif (
-            self.position
-            and not self.sold_today
-            and not self.bought_today
-            and self.data.close[0] < self.long_stoploss
-            and self.data.close[0] < self.ema
-        ):
+        elif (self.position and not self.sold_today and not self.bought_today
+              and self.data.close[0] < self.long_stoploss
+              and self.data.close[0] < self.ema):
             self.order = self.close()
             self.bought_today = False
 
         # short sell
-        if (
-            not self.position
-            and not self.bought_today
-            and not self.sold_today
-            and self.data.close[0] < self.ema[0]
-            and self.crossover < 0
-        ):
+        if (not self.position and not self.bought_today and not self.sold_today
+                and self.data.close[0] < self.ema[0] and self.crossover < 0):
             self.order = self.sell()
             self.short_stoploss = 0  # nearest swing high
             self.sold_today = True
 
         # target
         # 1.5:1
-        elif (
-            self.position
-            and not self.bought_today
-            and self.sold_today
-            and self.data.close[0] < self.short_target
-        ):
+        elif (self.position and not self.bought_today and self.sold_today
+              and self.data.close[0] < self.short_target):
             self.order = self.close()
             self.sold_today = False
             self.bought_today = False
 
         # stoploss
         # nearest swing high
-        elif (
-            self.position
-            and not self.sold_today
-            and not self.bought_today
-            and self.data.close[0] > self.short_stoploss
-            and self.data.close[0] > self.ema
-        ):
+        elif (self.position and not self.sold_today and not self.bought_today
+              and self.data.close[0] > self.short_stoploss
+              and self.data.close[0] > self.ema):
             self.order = self.close()
             self.sold_today = False
 
@@ -176,11 +151,9 @@ if __name__ == "__main__":
 
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-    cursor.execute(
-        """
+    cursor.execute("""
         SELECT DISTINCT(stock_id) as stock_id FROM stock_price_minute
-    """
-    )
+    """)
 
     stocks = cursor.fetchall()
     for stock in stocks:

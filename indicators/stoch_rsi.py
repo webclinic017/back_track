@@ -17,4 +17,3 @@ class StochRSI(backtrader.Indicator):
 
         self.l.stochrsi = (rsi - minrsi) / (maxrsi - minrsi)
         self.l.stochmin = ''
-

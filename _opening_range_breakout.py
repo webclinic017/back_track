@@ -58,55 +58,39 @@ class SupertrendEMA(backtrader.Strategy):
             self.bought_today = False
 
         opening_range_start_time = time(9, 30, 0)
-        dt = datetime.combine(date.today(), opening_range_start_time) + timedelta(
-            minutes=self.p.num_opening_bars
-        )
+        dt = datetime.combine(date.today(),
+                              opening_range_start_time) + timedelta(
+                                  minutes=self.p.num_opening_bars)
         opening_range_end_time = dt.time()
 
-        if (
-            current_bar_datetime.time() >= opening_range_start_time
-            and current_bar_datetime.time() < opening_range_end_time
-        ):
-            self.opening_range_high = max(self.data.high[0], self.opening_range_high)
-            self.opening_range_low = min(self.data.low[0], self.opening_range_low)
+        if (current_bar_datetime.time() >= opening_range_start_time
+                and current_bar_datetime.time() < opening_range_end_time):
+            self.opening_range_high = max(self.data.high[0],
+                                          self.opening_range_high)
+            self.opening_range_low = min(self.data.low[0],
+                                         self.opening_range_low)
             self.opening_range = self.opening_range_high - self.opening_range_low
 
         else:
-            if (
-                not self.position
-                and not self.bought_today
-                and not self.sold_today
-                and self.data.close[0] > self.ema
-                and self.data.close[0] > self.opening_range_high
-            ):
+            if (not self.position and not self.bought_today
+                    and not self.sold_today and self.data.close[0] > self.ema
+                    and self.data.close[0] > self.opening_range_high):
                 self.order = self.buy()
                 self.bought_today = True
 
-            elif (
-                self.position
-                and self.bought_today
-                and not self.sold_today
-                and self.data.close[0] < self.ema
-            ):
+            elif (self.position and self.bought_today and not self.sold_today
+                  and self.data.close[0] < self.ema):
                 self.order = self.close()
                 self.bought_today = False
 
-            if (
-                not self.position
-                and not self.bought_today
-                and not self.sold_today
-                and self.data.close[0] < self.ema
-                and self.data.close[0] < self.opening_range_high
-            ):
+            if (not self.position and not self.bought_today
+                    and not self.sold_today and self.data.close[0] < self.ema
+                    and self.data.close[0] < self.opening_range_high):
                 self.order = self.sell()
                 self.sold_today = True
 
-            if (
-                self.position
-                and self.sold_today
-                and not self.bought_today
-                and self.data.close[0] > self.ema
-            ):
+            if (self.position and self.sold_today and not self.bought_today
+                    and self.data.close[0] > self.ema):
                 self.order = self.close()
                 self.sold_today = False
 
@@ -116,7 +100,8 @@ class SupertrendEMA(backtrader.Strategy):
 
     def stop(self):
         self.log(f" [Broker Balance: {self.broker.getvalue()}] ")
-        self.log(f"--- PNL: {self.broker.getvalue() - self.opening_amount} ---")
+        self.log(
+            f"--- PNL: {self.broker.getvalue() - self.opening_amount} ---")
 
         if self.broker.getvalue() > 130000:
             self.log("*** WINNER ***")
@@ -138,11 +123,9 @@ if __name__ == "__main__":
 
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-    cursor.execute(
-        """
+    cursor.execute("""
         SELECT DISTINCT(stock_id) as stock_id FROM stock_price_minute
-    """
-    )
+    """)
 
     stocks = cursor.fetchall()
     for stock in stocks:

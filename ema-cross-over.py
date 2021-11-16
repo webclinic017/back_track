@@ -28,18 +28,15 @@ class EmaCrossOver(backtrader.Strategy):
         self.short_stoploss = 0
         self.long_target = 0
         self.short_target = 0
-        self.ema_slow = backtrader.indicators.EMA(
-            period=self.p.ema_slow, plot=True
-        )  # red
-        self.ema_fast = backtrader.indicators.EMA(
-            period=self.p.ema_fast, plot=True
-        )  # green
-        self.ema_long = backtrader.indicators.EMA(
-            period=self.p.ema_long, plot=True
-        )  # white
-        self.crossover = backtrader.indicators.CrossOver(
-            self.ema_fast, self.ema_slow, plot=True
-        )
+        self.ema_slow = backtrader.indicators.EMA(period=self.p.ema_slow,
+                                                  plot=True)  # red
+        self.ema_fast = backtrader.indicators.EMA(period=self.p.ema_fast,
+                                                  plot=True)  # green
+        self.ema_long = backtrader.indicators.EMA(period=self.p.ema_long,
+                                                  plot=True)  # white
+        self.crossover = backtrader.indicators.CrossOver(self.ema_fast,
+                                                         self.ema_slow,
+                                                         plot=True)
 
     def log(self, txt, dt=None):
         if dt is None:
@@ -59,15 +56,13 @@ class EmaCrossOver(backtrader.Strategy):
             if order.isbuy():
                 self.buying_price = order.executed.price + order.executed.comm
                 self.long_target = self.buying_price + (
-                    (self.buying_price - self.long_stoploss) * 1.5
-                )
+                    (self.buying_price - self.long_stoploss) * 1.5)
                 self.log(f"BUY EXECUTED, {order_details}")
 
             elif order.issell():
                 self.selling_price = order.executed.price - order.executed.comm
                 self.short_target = self.selling_price - (
-                    (self.short_stoploss - self.selling_price) * 1.5
-                )
+                    (self.short_stoploss - self.selling_price) * 1.5)
                 self.log(f"*** SELL EXECUTED, Price: {order_details} ***")
 
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
@@ -81,74 +76,50 @@ class EmaCrossOver(backtrader.Strategy):
 
             # buy long
             # fast ema crosses the slow ema from below
-        if (
-            not self.position
-            and not self.bought_today
-            and not self.sold_today
-            and self.crossover > 0
-            and self.data.close[0] > self.ema_long[0]
-        ):
+        if (not self.position and not self.bought_today and not self.sold_today
+                and self.crossover > 0
+                and self.data.close[0] > self.ema_long[0]):
             self.order = self.buy()
             self.long_stoploss = self.data.low[-1]  # most recent low
             self.bought_today = True
             self.log(f"=== LONG BUY EXECUTED ===")
 
         # long target | RRR: 1.5:1
-        elif (
-            self.position
-            and self.bought_today
-            and not self.sold_today
-            and self.data.close[0] > self.long_target
-        ):
+        elif (self.position and self.bought_today and not self.sold_today
+              and self.data.close[0] > self.long_target):
             self.order = self.close()
             self.bought_today = False
             self.log(f"=== LONG BUY TARGET HIT ===")
 
         # stoploss
         # most recent low and below EMA 200
-        elif (
-            self.position
-            and self.bought_today
-            and not self.sold_today
-            and self.data.close[0] < self.long_stoploss
-        ):
+        elif (self.position and self.bought_today and not self.sold_today
+              and self.data.close[0] < self.long_stoploss):
             self.order = self.close()
             self.bought_today = False
             self.log(f"=== LONG BUY STOPLOSS HIT | LOSER ===")
 
         # shortsell
         # slow ema cross fast ema from below
-        if (
-            not self.position
-            and not self.bought_today
-            and not self.sold_today
-            and self.crossover < 0
-            and self.data.close[0] < self.ema_long[0]
-        ):
+        if (not self.position and not self.bought_today and not self.sold_today
+                and self.crossover < 0
+                and self.data.close[0] < self.ema_long[0]):
             self.order = self.sell()
             self.short_stoploss = self.data.high[-1]  # most recent high
             self.sold_today = True
             self.log(f"=== SHORT SELL EXECUTED ===")
 
         # shortsell target |RRR: 1.5:1
-        elif (
-            self.position
-            and self.sold_today
-            and not self.bought_today
-            and self.data.close[0] < self.short_target
-        ):
+        elif (self.position and self.sold_today and not self.bought_today
+              and self.data.close[0] < self.short_target):
             self.order = self.close()
             self.sold_today = False
             self.log(f"=== SHORT SELL TARGET HIT ===")
 
         # shortsell stoploss
         # most recent high and above EMA 200
-        elif (
-            self.position
-            and self.sold_today
-            and not self.bought_today
-            and self.data.close[0] > self.short_stoploss
-        ):
+        elif (self.position and self.sold_today and not self.bought_today
+              and self.data.close[0] > self.short_stoploss):
             self.order = self.close()
             self.sold_today = False
             self.log(f"=== SHORT SELL STOPLOSS HIT | LOSER ===")
@@ -179,11 +150,9 @@ if __name__ == "__main__":
 
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-    cursor.execute(
-        """
+    cursor.execute("""
         SELECT DISTINCT(stock_id) as stock_id FROM stock_price_minute
-    """
-    )
+    """)
 
     stocks = cursor.fetchall()
     for stock in stocks:
@@ -191,7 +160,9 @@ if __name__ == "__main__":
         cerebro = backtrader.Cerebro()
         cerebro.broker.setcash(100000.0)
         cerebro.broker.setcommission(commission=0.010)
-        print(f"|--- Open Amount [Broker Balance]: { cerebro.broker.getvalue() } ---|")
+        print(
+            f"|--- Open Amount [Broker Balance]: { cerebro.broker.getvalue() } ---|"
+        )
 
         # cerebro.addsizer(backtrader.sizers.PercentSizer, percents=95)
 

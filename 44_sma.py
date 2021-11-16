@@ -23,20 +23,16 @@ class FourtyFourSma(backtrader.Strategy):
         self.long_target = 0
         self.short_target = 0
         self.sma_high = backtrader.indicators.SimpleMovingAverage(
-            self.data.high, period=self.p.period, plot=True
-        )
+            self.data.high, period=self.p.period, plot=True)
         self.sma = backtrader.indicators.SimpleMovingAverage(
-            self.data, period=self.p.period, plot=True
-        )
+            self.data, period=self.p.period, plot=True)
         self.sma_low = backtrader.indicators.SimpleMovingAverage(
-            self.data.low, period=self.p.period, plot=True
-        )
+            self.data.low, period=self.p.period, plot=True)
         self.sma_long = backtrader.indicators.SimpleMovingAverage(
-            self.data, period=self.p.sma_long, plot=True
-        )
-        self.crossover = backtrader.indicators.CrossOver(
-            self.data, self.sma_high, plot=True
-        )
+            self.data, period=self.p.sma_long, plot=True)
+        self.crossover = backtrader.indicators.CrossOver(self.data,
+                                                         self.sma_high,
+                                                         plot=True)
 
     def log(self, txt, dt=None):
         if dt is None:
@@ -54,15 +50,13 @@ class FourtyFourSma(backtrader.Strategy):
             if order.isbuy():
                 self.buying_price = order.executed.price + order.executed.comm
                 self.long_target = self.buying_price + (
-                    (self.buying_price - self.long_stoploss) * 1.5
-                )
+                    (self.buying_price - self.long_stoploss) * 1.5)
                 self.log(f"*** BUY EXECUTED, Price: {order_details} ***")
 
             elif order.issell():
                 self.selling_price = order.executed.price - order.executed.comm
                 self.short_target = self.selling_price - (
-                    (self.short_stoploss - self.selling_price) * 1.5
-                )
+                    (self.short_stoploss - self.selling_price) * 1.5)
                 self.log(f"*** SELL EXECUTED, Price: {order_details} ***")
 
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
@@ -75,24 +69,15 @@ class FourtyFourSma(backtrader.Strategy):
             return
 
         # long buy when buying cabdles and uptrend
-        if (
-            not self.position
-            and not self.bought_today
-            and not self.sold_today
-            and self.data.close[0] > self.sma[0]
-            and self.data.close[0] > self.sma_long
-            and (
-                self.data.close[0] == self.data.high[0]
-                or self.data.high[0] == self.data.open[0]
-                or (
-                    self.data.high[0] == self.data.close[0]
-                    and self.data.open[0] == self.data.low[0]
-                )
-                or (self.data.close[0] > self.data.open[0])
-            )
-            and not self.sold_today
-            and self.crossover > 0
-        ):
+        if (not self.position and not self.bought_today and not self.sold_today
+                and self.data.close[0] > self.sma[0]
+                and self.data.close[0] > self.sma_long
+                and (self.data.close[0] == self.data.high[0]
+                     or self.data.high[0] == self.data.open[0] or
+                     (self.data.high[0] == self.data.close[0]
+                      and self.data.open[0] == self.data.low[0]) or
+                     (self.data.close[0] > self.data.open[0]))
+                and not self.sold_today and self.crossover > 0):
             self.order = self.buy()
             self.long_stoploss = self.data.low[0]  # stoploss value
             self.bought_today = True
@@ -100,44 +85,29 @@ class FourtyFourSma(backtrader.Strategy):
 
         # long target
         # 1.5:1
-        elif (
-            self.position
-            and self.bought_today
-            and not self.sold_today
-            and self.data.close[0] > self.long_target
-        ):
+        elif (self.position and self.bought_today and not self.sold_today
+              and self.data.close[0] > self.long_target):
             self.order = self.close()
             self.bought_today = False
             self.log(f"=== LONG BUY TARGET HIT ===")
 
         # stoploss
         # stoploss will be low of the selling candle and below SMA 200
-        elif (
-            self.position
-            and self.bought_today
-            and self.data.close[0] < self.long_stoploss
-            and not self.sold_today
-        ):
+        elif (self.position and self.bought_today
+              and self.data.close[0] < self.long_stoploss
+              and not self.sold_today):
             self.order = self.close()
             self.bought_today = False
             self.log(f"=== LONG BUY STOPLOSS HIT | LOSER ===")
 
         # short sell when selling candle signals and down trend
-        if (
-            not self.position
-            and not self.bought_today
-            and not self.sold_today
-            and self.data.close[0] < self.sma_long
-            and (
-                (self.data.close[0] == self.data.high[0])
-                or (
-                    self.data.high[0] == self.data.open[0]
-                    and self.data.close[0] == self.data.low[0]
-                    or (self.data.open[0] > self.data.close[0])
-                )
-            )
-            and self.crossover < 0
-        ):
+        if (not self.position and not self.bought_today and not self.sold_today
+                and self.data.close[0] < self.sma_long
+                and ((self.data.close[0] == self.data.high[0]) or
+                     (self.data.high[0] == self.data.open[0]
+                      and self.data.close[0] == self.data.low[0] or
+                      (self.data.open[0] > self.data.close[0])))
+                and self.crossover < 0):
             self.order = self.sell()
             self.short_stoploss = self.data.high[0]  # stoploss value
             self.sold_today = True
@@ -145,24 +115,16 @@ class FourtyFourSma(backtrader.Strategy):
 
         # short target
         # 1.5:1
-        elif (
-            self.position
-            and not self.bought_today
-            and self.sold_today
-            and self.data.close[0] < self.short_target
-        ):
+        elif (self.position and not self.bought_today and self.sold_today
+              and self.data.close[0] < self.short_target):
             self.order = self.close()
             self.sold_today = False
             self.log(f"=== SHORT SELL TARGET HIT ===")
 
         # stoploss
         # stoploss will be high of the selling candle and above SMA 200
-        elif (
-            self.position
-            and not self.bought_today
-            and self.sold_today
-            and self.data.close[0] > self.short_stoploss
-        ):
+        elif (self.position and not self.bought_today and self.sold_today
+              and self.data.close[0] > self.short_stoploss):
             self.order = self.close()
             self.sold_today = False
             self.log(f"=== SHORT SELL STOPLOSS HIT | LOSER ===")
@@ -173,7 +135,8 @@ class FourtyFourSma(backtrader.Strategy):
 
     def stop(self):
         self.log("Ending Value %.2f" % (self.broker.getvalue()))
-        self.log(f"--- PNL : {self.broker.getvalue() - self.opening_amount} ---")
+        self.log(
+            f"--- PNL : {self.broker.getvalue() - self.opening_amount} ---")
 
         if self.broker.getvalue() > 130000:
             self.log("*** WINNER ***")
@@ -195,11 +158,9 @@ if __name__ == "__main__":
 
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-    cursor.execute(
-        """
+    cursor.execute("""
         SELECT DISTINCT(stock_id) as stock_id FROM stock_price_minute
-    """
-    )
+    """)
 
     stocks = cursor.fetchall()
     for stock in stocks:

@@ -71,12 +71,11 @@ class FiveStarRSI(backtrader.Strategy):
             self.log(f"=== LONG BUY EXECUTED ===")
 
         # long target
-        # 1.5:1
         elif (
             self.position
             and self.bought_today
             and not self.sold_today
-            and self.rsi >= 60
+            and self.rsi > 60
         ):
             self.order = self.close()
             self.bought_today = False
@@ -111,7 +110,6 @@ class FiveStarRSI(backtrader.Strategy):
             self.log(f"=== SHORT SELL EXECUTED ===")
 
         # short target
-        # 1.5:1
         elif (
             self.position
             and not self.bought_today
@@ -154,11 +152,13 @@ if __name__ == "__main__":
     database_path_fifteen_minute = "./databases/app-minute-fifteen.db"
     database_path_crypto = "./databases/crypto-data.db"
     database_path_five_minute = "./databases/app-minute-five.db"
+    database_path_daily = "./databases/app-daily.db"
 
     # conn = sqlite3.connect(database_path_one_minute)
     # conn = sqlite3.connect(database_path_fifteen_minute)
     # conn = sqlite3.connect(database_path_crypto)
-    conn = sqlite3.connect(database_path_five_minute)
+    # conn = sqlite3.connect(database_path_five_minute)
+    conn = sqlite3.connect(database_path_daily)
 
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -182,8 +182,8 @@ if __name__ == "__main__":
             select datetime, open, high, low, close, volume
             from stock_price_minute
             where stock_id = :stock_id
-            and strftime('%H:%M:%S', datetime) >= '09:30:00' 
-            and strftime('%H:%M:%S', datetime) < '16:00:00'
+            and strftime('%Y-%m-%d', datetime) >= '2020-01-01' 
+            and strftime('%Y-%m-%d', datetime) < '2021-12-31'
             order by datetime asc
         """,
             conn,
