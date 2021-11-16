@@ -65,10 +65,10 @@ class OpenHigh_OpenLow(backtrader.Strategy):
             if self.order:
                 return
 
-                # buy long
-                # buy candle must be open == low
-                # close should be abouve 200 EMA
-                # entry: open of the second candle(9:30:00 candle)
+            # buy long
+            # buy candle must be open == low
+            # close should be abouve 200 EMA
+            # entry: open of the second candle(9:30:00 candle)
             if (not self.position and not self.sold_today
                     and not self.bought_today and self.data.close[0] > self.ema
                     and self.data.open[0] == self.data.low[0]):

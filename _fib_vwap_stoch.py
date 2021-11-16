@@ -39,15 +39,13 @@ class OpenHigh_OpenLow(backtrader.Strategy):
             if order.isbuy():
                 self.buying_price = order.executed.price + order.executed.comm
                 self.long_target = self.buying_price + (
-                    (self.buying_price - self.long_stoploss) * 1.69
-                )
+                    (self.buying_price - self.long_stoploss) * 1.69)
                 self.log(f"BUY EXECUTED:  {order_details}")
 
             elif order.issell():
                 self.selling_price = order.executed.price - order.executed.comm
                 self.short_target = self.selling_price - (
-                    (self.short_stoploss - self.selling_price) * 1.69
-                )
+                    (self.short_stoploss - self.selling_price) * 1.69)
                 self.log(f"*** SELL EXECUTED: {order_details} ***")
 
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
@@ -63,25 +61,13 @@ class OpenHigh_OpenLow(backtrader.Strategy):
         # cmp should be just above pivots
         # cmp should be just above vwap
         # stoch fastk > stoch fastd
-        if (
-            not self.position
-            and not self.bought_today
-            and not self.sold_today
-            and self.data.close[0] > self.vwap[0]
-            and (
-                self.data.close[0]
-                > (
-                    self.pivot.lines.p
-                    or self.pivot.lines.s1
-                    or self.pivot.lines.s2
-                    or self.pivot.lines.s3
-                    or self.pivot.lines.r1
-                    or self.pivot.lines.r2
-                    or self.pivot.lines.r3
-                )
-            )
-            and self.stochastic_rsi.fastk > self.stochastic_rsi.fastd
-        ):
+        if (not self.position and not self.bought_today and not self.sold_today
+                and self.data.close[0] > self.vwap[0] and
+            (self.data.close[0] >
+             (self.pivot.lines.p or self.pivot.lines.s1 or self.pivot.lines.s2
+              or self.pivot.lines.s3 or self.pivot.lines.r1
+              or self.pivot.lines.r2 or self.pivot.lines.r3))
+                and self.stochastic_rsi.fastk > self.stochastic_rsi.fastd):
             self.order = self.buy()
             # below previews candle low and vwap(which ever is low)
             if self.data.low[-1] < self.vwap[-1]:
@@ -93,37 +79,23 @@ class OpenHigh_OpenLow(backtrader.Strategy):
 
         # target
         # RRR: 1.5:1
-        elif (
-            self.position
-            and self.bought_today
-            and not self.sold_today
-            and self.data.close[0] > self.long_target
-        ):
+        elif (self.position and self.bought_today and not self.sold_today
+              and self.data.close[0] > self.long_target):
             self.order = self.close()
             self.bought_today = False
             self.log(f"=== LONG BUY TARGET HIT  ===")
 
         # stoploss
-        elif (
-            self.position
-            and not self.sold_today
-            and self.bought_today
-            and self.data.close[0] < self.long_stoploss
-        ):
+        elif (self.position and not self.sold_today and self.bought_today
+              and self.data.close[0] < self.long_stoploss):
             self.order = self.close()
             self.bought_today = False
             self.log(f"=== LONG BUY STOPLOSS HIT | LOSER ===")
 
         # short sell
-        if (
-            not self.position
-            and not self.sold_today
-            and not self.bought_today
-            and (
-                self.data.close[0] > self.pivot.lines.s1
-                and self.data.close[0] < self.vwap[0]
-            )
-        ):
+        if (not self.position and not self.sold_today and not self.bought_today
+                and (self.data.close[0] > self.pivot.lines.s1
+                     and self.data.close[0] < self.vwap[0])):
             self.order = self.sell()
             if self.data.high[-1] < self.vwap[-1]:
                 self.short_stoploss = self.data.high[-1]
@@ -133,23 +105,15 @@ class OpenHigh_OpenLow(backtrader.Strategy):
             self.log(f"=== SHORT SELL EXECUTED ===")
 
         # target
-        elif (
-            self.position
-            and self.sold_today
-            and not self.bought_today
-            and self.data.close[0] < self.short_target
-        ):
+        elif (self.position and self.sold_today and not self.bought_today
+              and self.data.close[0] < self.short_target):
             self.order = self.close()
             self.sold_today = False
             self.log(f"=== SHORT SELL TARGET HIT ===")
 
         # stoploss
-        elif (
-            self.position
-            and self.sold_today
-            and not self.bought_today
-            and self.data.close[0] > self.short_stoploss
-        ):
+        elif (self.position and self.sold_today and not self.bought_today
+              and self.data.close[0] > self.short_stoploss):
             self.order = self.close()
             self.sold_today = False
             self.log(f"=== SHORT SELL STOPLOSS HIT | LOSER ===")
@@ -160,7 +124,8 @@ class OpenHigh_OpenLow(backtrader.Strategy):
 
     def stop(self):
         self.log(f" [Broker Balance: {self.broker.getvalue()}] ")
-        self.log(f"--- PNL: {self.broker.getvalue() - self.opening_amount} ---")
+        self.log(
+            f"--- PNL: {self.broker.getvalue() - self.opening_amount} ---")
 
         if self.broker.getvalue() > 130000:
             self.log("*** WINNER ***")
@@ -182,11 +147,9 @@ if __name__ == "__main__":
 
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-    cursor.execute(
-        """
+    cursor.execute("""
         SELECT DISTINCT(stock_id) as stock_id FROM stock_price_minute
-    """
-    )
+    """)
 
     stocks = cursor.fetchall()
     for stock in stocks:

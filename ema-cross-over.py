@@ -6,17 +6,7 @@ from analyzers.trade_statistics import BasicTradeStats
 
 
 class EmaCrossOver(backtrader.Strategy):
-    params = dict(
-        ema_slow=21,
-        ema_fast=9,
-        ema_long=200,
-        long_stoploss=0.0,
-        short_stoploss=0.0,
-        buying_price=0.0,
-        selling_price=0.0,
-        long_target=0,
-        short_target=0,
-    )
+    params = dict(ema_slow=21, ema_fast=9, ema_long=200)
 
     def __init__(self):
         self.order = None
