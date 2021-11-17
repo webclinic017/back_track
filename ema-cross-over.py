@@ -40,14 +40,14 @@ class EmaCrossOver(backtrader.Strategy):
 
         if order.status in [order.Completed]:
             order_details = (
-                f"{order.executed.price}, {order.executed.value}, {order.executed.comm}"
+                f"{order.executed.price}, Cost: {order.executed.value}, Commission: {order.executed.comm}"
             )
 
             if order.isbuy():
                 self.buying_price = order.executed.price + order.executed.comm
                 self.long_target = self.buying_price + (
                     (self.buying_price - self.long_stoploss) * 1.5)
-                self.log(f"BUY EXECUTED, {order_details}")
+                self.log(f"BUY EXECUTED, Price: {order_details}")
 
             elif order.issell():
                 self.selling_price = order.executed.price - order.executed.comm
@@ -114,11 +114,14 @@ class EmaCrossOver(backtrader.Strategy):
             self.sold_today = False
             self.log(f"=== SHORT SELL STOPLOSS HIT | LOSER ===")
 
+    def start(self):
+        self.opening_amount = self.broker.getvalue()
+        self.log(f"--- Opening Amount: {self.opening_amount} ---")
+
     def stop(self):
         self.log("Ending Value %.2f" % (self.broker.getvalue()))
         self.log(
-            f"--- Profit[if the value +]/Lose [if the value -] : {self.broker.getvalue() - 100000} ---"
-        )
+            f"--- PNL : {self.broker.getvalue() - self.opening_amount} ---")
 
         if self.broker.getvalue() > 130000:
             self.log("*** WINNER ***")
