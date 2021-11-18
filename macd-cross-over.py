@@ -131,16 +131,8 @@ class MacdCrossOver(backtrader.Strategy):
 
 
 if __name__ == "__main__":
-    database_path_one_minute = "./databases/app-minute-one.db"
     database_path_fifteen_minute = "./databases/app-minute-fifteen.db"
-    database_path_crypto = "./databases/crypto-data.db"
-    database_path_five_minute = "./databases/app-minute-five.db"
-
-    # conn = sqlite3.connect(database_path_one_minute)
     conn = sqlite3.connect(database_path_fifteen_minute)
-    # conn = sqlite3.connect(database_path_crypto)
-    # conn = sqlite3.connect(database_path_five_minute)
-
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     cursor.execute("""

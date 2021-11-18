@@ -64,8 +64,8 @@ class EmaCrossOver(backtrader.Strategy):
         if self.order:
             return
 
-            # buy long
-            # fast ema crosses the slow ema from below
+        # buy long
+        # fast ema crosses the slow ema from below
         if (not self.position and not self.bought_today and not self.sold_today
                 and self.crossover > 0
                 and self.data.close[0] > self.ema_long[0]):
@@ -131,16 +131,8 @@ class EmaCrossOver(backtrader.Strategy):
 
 
 if __name__ == "__main__":
-    database_path_one_minute = "./databases/app-minute-one.db"
     database_path_fifteen_minute = "./databases/app-minute-fifteen.db"
-    database_path_crypto = "./databases/crypto-data.db"
-    database_path_five_minute = "./databases/app-minute-five.db"
-
-    # conn = sqlite3.connect(database_path_one_minute)
     conn = sqlite3.connect(database_path_fifteen_minute)
-    # conn = sqlite3.connect(database_path_crypto)
-    # conn = sqlite3.connect(database_path_five_minute)
-
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     cursor.execute("""
