@@ -3,7 +3,6 @@ import backtrader
 import pandas
 import sqlite3
 from analyzers.trade_statistics import BasicTradeStats
-from indicators.adx import AverageDirectionalMovementIndex as adx
 
 
 class FourtyFourSma(backtrader.Strategy):
