@@ -64,6 +64,7 @@ class DmiCrossOver(backtrader.Strategy):
             return
 
         # buy long
+        # above 200 EMA +DI crossess -DI from below
         if (not self.position and not self.bought_today and not self.sold_today
                 and self.data.close[0] > self.ema[0] and self.crossover > 0):
             self.order = self.buy()
@@ -80,6 +81,7 @@ class DmiCrossOver(backtrader.Strategy):
             self.log(f"=== LONG BUY TARGET HIT ===")
 
         # stoploss
+        # nearest swing low
         elif (self.position and self.bought_today and not self.sold_today
               and self.data.close[0] < self.long_stoploss):
             self.order = self.close()
@@ -87,6 +89,7 @@ class DmiCrossOver(backtrader.Strategy):
             self.log(f"=== LONG BUY STOPLOSS HIT | LOSER ===")
 
         # short sell
+        # below 200 EMA and -DI crosses +DI from below
         if (not self.position and not self.bought_today and not self.sold_today
                 and self.data.close[0] < self.ema[0] and self.crossover < 0):
             self.order = self.sell()
@@ -102,6 +105,7 @@ class DmiCrossOver(backtrader.Strategy):
             self.log(f"=== SHORT SELL TARGET HIT ===")
 
         # stoploss
+        # nearest swing high
         elif (self.position and not self.bought_today and self.sold_today
               and self.data.close[0] > self.long_stoploss):
             self.order = self.close()
@@ -126,16 +130,8 @@ class DmiCrossOver(backtrader.Strategy):
 
 
 if __name__ == "__main__":
-    database_path_one_minute = "./databases/app-minute-one.db"
     database_path_fifteen_minute = "./databases/app-minute-fifteen.db"
-    database_path_crypto = "./databases/crypto-data.db"
-    database_path_five_minute = "./databases/app-minute-five.db"
-
-    # conn = sqlite3.connect(database_path_one_minute)
     conn = sqlite3.connect(database_path_fifteen_minute)
-    # conn = sqlite3.connect(database_path_crypto)
-    # conn = sqlite3.connect(database_path_five_minute)
-
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     cursor.execute("""
