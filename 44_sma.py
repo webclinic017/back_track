@@ -7,10 +7,7 @@ from indicators.adx import AverageDirectionalMovementIndex as adx
 
 
 class FourtyFourSma(backtrader.Strategy):
-    params = dict(
-        period=44,
-        sma_long=200,
-    )
+    params = dict(period=44, sma_long=200)
 
     def __init__(self):
         self.order = None
