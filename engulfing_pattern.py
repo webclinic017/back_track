@@ -80,9 +80,8 @@ class EngulfingPattern(backtrader.Strategy):
 
         # stoploss
         # stoploss will be low of the selling candle
-        elif (self.position and self.bought_today
-              and self.data.close[0] < self.long_stoploss
-              and not self.sold_today):
+        elif (self.position and self.bought_today and not self.sold_today
+              and self.data.close[0] < self.long_stoploss):
             self.order = self.close()
             self.bought_today = False
             self.log(f"=== LONG BUY STOPLOSS HIT | LOSER ===")
