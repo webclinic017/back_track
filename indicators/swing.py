@@ -2,8 +2,12 @@ import backtrader
 
 
 class SwingInd(backtrader.Indicator):
+    '''
+    A Simple swing indicator that measures swings (the lowest/highest value)
+    within a given time period.
+    '''
     lines = ('swings', 'signal')
-    params = dict(period=7, sl=0, sh=0)
+    params = (('period', 7), )
 
     def __init__(self):
 
@@ -19,11 +23,9 @@ class SwingInd(backtrader.Indicator):
         #check the bar in the middle of the range and check if greater than rest
         if highs.pop(self.p.period) > max(highs):
             self.lines.swings[-self.p.period] = 1  #add new swing
-            self.p.sh = self.data.high[0]
             self.lines.signal[0] = 1  #give a signal
         elif lows.pop(self.p.period) < min(lows):
             self.lines.swings[-self.p.period] = -1  #add new swing
-            self.p.sl = self.data.low[0]
             self.lines.signal[0] = -1  #give a signal
         else:
             self.lines.swings[-self.p.period] = 0

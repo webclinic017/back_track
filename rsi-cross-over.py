@@ -3,29 +3,22 @@ import backtrader
 import pandas
 import sqlite3
 from analyzers.trade_statistics import BasicTradeStats
-from indicators.swing import SwingInd
 from indicators.swing_line import SwingLine
 
 
 class RsiCrossOver(backtrader.Strategy):
-    params = dict(
-        upperband=70,
-        safelow=50,
-        lowerband=30,
-        ema=200,
-        period=14,
-        buying_price=0,
-        selling_price=0,
-        long_target=0,
-        short_target=0,
-        long_stoploss=0,
-        short_stoploss=0,
-    )
+    params = dict(upperband=70, safelow=50, lowerband=30, ema=200)
 
     def __init__(self):
         self.order = None
         self.bought_today = False
         self.sold_today = False
+        self.buying_price = 0
+        self.selling_price = 0
+        self.long_stoploss = 0
+        self.short_stoploss = 0
+        self.long_target = 0
+        self.short_target = 0
         self.rsi = backtrader.indicators.RSI(
             self.data,
             upperband=self.p.upperband,
@@ -36,7 +29,6 @@ class RsiCrossOver(backtrader.Strategy):
         self.crossover = backtrader.ind.CrossOver(backtrader.ind.RSI(),
                                                   50.0,
                                                   plot=True)
-        self.swingline = SwingLine(self.data, plot=True)
 
     def log(self, txt, dt=None):
         if dt is None:
@@ -50,20 +42,24 @@ class RsiCrossOver(backtrader.Strategy):
 
         if order.status in [order.Completed]:
             order_details = (
-                f"{order.executed.price}, {order.executed.value}, {order.executed.comm}"
+                f"{order.executed.price}, Cost: {order.executed.value}, Commission: {order.executed.comm}"
             )
 
             if order.isbuy():
-                self.p.buying_price = order.executed.price + order.executed.comm
-                self.p.long_target = self.p.buying_price + (
-                    (self.p.buying_price - self.p.long_stoploss) * 1.5)
-                self.log(f"BUY EXECUTED, {order_details}")
+                self.buying_price = order.executed.price + order.executed.comm
+                self.long_target = self.buying_price + (
+                    (self.buying_price - self.long_stoploss) * 1.5)
+                self.log(
+                    f"BUY EXECUTED, Price: {order_details} | LT: {self.long_target} | LSL: {self.long_stoploss} "
+                )
 
             elif order.issell():
                 self.selling_price = order.executed.price - order.executed.comm
                 self.short_target = self.selling_price - (
                     (self.short_stoploss - self.selling_price) * 1.5)
-                self.log(f"*** SELL EXECUTED, Price: {order_details} ***")
+                self.log(
+                    f"*** SELL EXECUTED, Price: {order_details} | ST: {self.short_target} | SSL: {self.short_stoploss}***"
+                )
 
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
             self.log("Order Canceled/Margin/Rejected")
@@ -80,8 +76,9 @@ class RsiCrossOver(backtrader.Strategy):
                 and self.data.close[0] > self.ema[0]
                 and self.crossover[0] > 0):
             self.order = self.buy()
-            self.long_stoploss = 0  # nearest swing high
+            self.long_stoploss = min(self.data.low.get(size=5))
             self.bought_today = True
+            self.log(f"=== LONG BUY EXECUTED ===")
 
         # target
         # 1.5:1
@@ -89,21 +86,23 @@ class RsiCrossOver(backtrader.Strategy):
               and self.data.close[0] > self.long_target):
             self.order = self.close()
             self.bought_today = False
+            self.log(f"=== LONG BUY TARGET HIT ===")
 
         # stoploss
         # nearest swing low
-        elif (self.position and not self.sold_today and not self.bought_today
-              and self.data.close[0] < self.long_stoploss
-              and self.data.close[0] < self.ema):
+        elif (self.position and not self.sold_today and self.bought_today
+              and self.data.close[0] < self.long_stoploss):
             self.order = self.close()
             self.bought_today = False
+            self.log(f"=== LONG BUY STOPLOSS HIT | LOSER ===")
 
         # short sell
         if (not self.position and not self.bought_today and not self.sold_today
                 and self.data.close[0] < self.ema[0] and self.crossover < 0):
             self.order = self.sell()
-            self.short_stoploss = 0  # nearest swing high
+            self.short_stoploss = max(self.data.high.get(size=5))
             self.sold_today = True
+            self.log(f"=== SHORT SELL EXECUTED ===")
 
         # target
         # 1.5:1
@@ -112,14 +111,15 @@ class RsiCrossOver(backtrader.Strategy):
             self.order = self.close()
             self.sold_today = False
             self.bought_today = False
+            self.log(f"=== SHORT SELL TARGET HIT ===")
 
         # stoploss
         # nearest swing high
-        elif (self.position and not self.sold_today and not self.bought_today
-              and self.data.close[0] > self.short_stoploss
-              and self.data.close[0] > self.ema):
+        elif (self.position and self.sold_today and not self.bought_today
+              and self.data.close[0] > self.short_stoploss):
             self.order = self.close()
             self.sold_today = False
+            self.log(f"=== SHORT SELL STOPLOSS HIT | LOSER ===")
 
     def start(self):
         self.opening_amount = self.broker.getvalue()

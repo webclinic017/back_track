@@ -3,22 +3,10 @@ import backtrader
 import pandas
 import sqlite3
 from analyzers.trade_statistics import BasicTradeStats
-from indicators.swing import SwingInd
 
 
 class MacdCrossOver(backtrader.Strategy):
-    params = dict(
-        macd_fast=12,
-        macd_slow=26,
-        macd_sig=9,
-        ema_period=200,
-        buying_price=0,
-        selling_price=0,
-        long_stoploss=0,
-        short_stoploss=0,
-        long_target=0.0,
-        short_target=0.0,
-    )
+    params = dict(macd_fast=12, macd_slow=26, macd_sig=9, ema_period=200)
 
     def __init__(self):
         self.order = None
@@ -30,6 +18,7 @@ class MacdCrossOver(backtrader.Strategy):
         self.short_stoploss = 0
         self.long_target = 0
         self.short_target = 0
+
         self.macd = backtrader.indicators.MACD(
             self.data,
             period_me1=self.p.macd_fast,
@@ -37,13 +26,12 @@ class MacdCrossOver(backtrader.Strategy):
             period_signal=self.p.macd_sig,
             plot=True,
         )
+
         self.mcross = backtrader.indicators.CrossOver(self.macd.macd,
                                                       self.macd.signal,
                                                       plot=True)
         self.ema = backtrader.indicators.EMA(period=self.p.ema_period,
                                              plot=True)
-
-        self.swing_line = SwingInd(self.data, plot=True)
 
     def log(self, txt, dt=None):
         if dt is None:
@@ -64,7 +52,7 @@ class MacdCrossOver(backtrader.Strategy):
                 self.buying_price = order.executed.price + order.executed.comm
                 self.long_target = self.buying_price + (
                     (self.buying_price - self.long_stoploss) * 1.5)
-                self.log(f"BUY EXECUTED, {order_details}")
+                self.log(f"*** BUY EXECUTED, Price: {order_details} ***")
 
             elif order.issell():
                 self.selling_price = order.executed.price - order.executed.comm
@@ -84,44 +72,48 @@ class MacdCrossOver(backtrader.Strategy):
         # buy long
         # macd crosses abouve signal line below the zero line of the histogram
         if (not self.position and not self.sold_today and not self.bought_today
-                and self.data.close[0] > self.ema[0] and self.mcross > 0
-                and self.macd.macd[0] < 0.0):
+                and self.data.close[0] > self.ema[0] and self.mcross[0] == 1):
             self.order = self.buy()
-            self.long_stoploss = 0  # nearest swing low
+            self.long_stoploss = min(self.data.low.get(size=5))
             self.bought_today = True
+            self.log(f"=== LONG BUY EXECUTED ===")
 
         # target
         elif (self.position and self.bought_today and not self.sold_today
               and self.data.close[0] > self.long_target):
             self.order = self.close()
             self.bought_today = False
+            self.log(f"=== LONG BUY TARGET HIT ===")
 
         # stoploss
         elif (self.position and self.bought_today and not self.sold_today
-              and self.data.close < self.long_stoploss):
+              and self.data.close[0] < self.long_stoploss):
             self.order = self.close()
             self.bought_today = False
+            self.log(f"=== LONG BUY STOPLOSS HIT | LOSER ===")
 
         # sell short
         # macd crossess below the signal line abouve the zero line of median line
-        if (self.position and not self.bought_today and self.sold_today
-                and self.data.close[0] < self.ema[0] and self.mcross < 0
-                and self.macd.macd[0] > 0.0):
+        if (not self.position and not self.bought_today and not self.sold_today
+                and self.data.close[0] < self.ema[0] and self.mcross[0] == -1):
             self.order = self.sell()
-            self.short_stoploss = 0  # nearest swing high
+            self.short_stoploss = max(self.data.high.get(size=5))
             self.sold_today = True
+            self.log(f"=== SHORT SELL EXECUTED ===")
 
         # target
         elif (self.position and not self.bought_today and self.sold_today
-              and self.data.close[0] > self.short_target):
+              and self.data.close[0] < self.short_target):
             self.order = self.close()
             self.sold_today = False
+            self.log(f"=== SHORT SELL TARGET HIT ===")
 
         # stoploss
-        elif (self.position and self.bought_today and not self.sold_today
-              and self.data.close > self.long_stoploss):
+        elif (self.position and not self.bought_today and self.sold_today
+              and self.data.close[0] > self.short_stoploss):
             self.order = self.close()
             self.sold_today = False
+            self.log(f"=== SHORT SELL STOPLOSS HIT | LOSER ===")
 
     def start(self):
         self.opening_amount = self.broker.getvalue()
@@ -129,9 +121,7 @@ class MacdCrossOver(backtrader.Strategy):
 
     def stop(self):
         self.log("Ending Value %.2f" % (self.broker.getvalue()))
-        self.log(
-            f"--- Profit[if the value +]/Lose [if the value -] : {self.broker.getvalue() - 100000} ---"
-        )
+        self.log(f"--- PNL : {self.broker.getvalue() - 100000} ---")
 
         if self.broker.getvalue() > 130000:
             self.log("*** WINNER ***")
