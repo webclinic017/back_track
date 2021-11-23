@@ -5,20 +5,32 @@ import sqlite3
 from analyzers.trade_statistics import BasicTradeStats
 
 
-class EngulfingPattern(backtrader.Strategy):
-    params = dict(period=44, ema=200)
+class FiveStarRSI(backtrader.Strategy):
+    params = dict(period=44, sma_long=200)
 
     def __init__(self):
         self.order = None
         self.bought_today = False
         self.sold_today = False
-        self.buying_price = 0
-        self.selling_price = 0
         self.long_stoploss = 0
         self.short_stoploss = 0
-        self.long_target = 0
-        self.short_target = 0
-        self.ema = backtrader.indicators.EMA(period=self.p.ema, plot=True)
+        self.rsi = backtrader.indicators.RSI(self.data,
+                                             period=14,
+                                             upperband=60,
+                                             lowerband=40,
+                                             plot=True)
+
+        self.rsi_weekly = backtrader.indicators.RSI(self.data,
+                                                    period=7,
+                                                    upperband=60,
+                                                    lowerband=40,
+                                                    plot=True)
+                                                    
+        self.rsi_monthly = backtrader.indicators.RSI(self.data,
+                                                     period=30,
+                                                     upperband=60,
+                                                     lowerband=40,
+                                                     plot=True)
 
     def log(self, txt, dt=None):
         if dt is None:
@@ -34,15 +46,9 @@ class EngulfingPattern(backtrader.Strategy):
             order_details = f"{order.executed.price}, Cost: {order.executed.value}, Commision: {order.executed.comm}"
 
             if order.isbuy():
-                self.buying_price = order.executed.price + order.executed.comm
-                self.long_target = self.buying_price + (
-                    (self.buying_price - self.long_stoploss) * 1.5)
                 self.log(f"*** BUY EXECUTED, Price: {order_details} ***")
 
             elif order.issell():
-                self.selling_price = order.executed.price - order.executed.comm
-                self.short_target = self.selling_price - (
-                    (self.short_stoploss - self.selling_price) * 1.5)
                 self.log(f"*** SELL EXECUTED, Price: {order_details} ***")
 
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
@@ -57,60 +63,53 @@ class EngulfingPattern(backtrader.Strategy):
         # long buy when buying cabdles and uptrend
         if (not self.position and not self.bought_today and not self.sold_today
                 and self.data.close[0] > self.data.open[0]
-                and (self.data.close[-1] <= self.data.close[0]
-                     and self.data.close[-1] >= self.data.open[0])
-                and (self.data.open[-1] <= self.data.close[0]
-                     and self.data.open[-1] >= self.data.open[0])
-                and self.data.close[0] > self.ema):
+                and self.rsi_weekly > 60 and self.rsi_monthly > 60
+                and self.rsi > 40):
             self.order = self.buy()
             self.long_stoploss = self.data.low[0]  # stoploss value
             self.bought_today = True
             self.log(f"=== LONG BUY EXECUTED ===")
 
         # long target
-        # 1.5:1
         elif (self.position and self.bought_today and not self.sold_today
-              and self.data.close[0] > self.long_target):
+              and self.rsi > 60):
             self.order = self.close()
             self.bought_today = False
             self.log(f"=== LONG BUY TARGET HIT ===")
 
         # stoploss
-        # stoploss will be low of the selling candle
-        elif (self.position and self.bought_today and not self.sold_today
+        # stoploss will be low of the selling candle and below SMA 200
+        elif (self.position and self.bought_today
+              and self.data.close[0] < self.long_stoploss
+              and not self.sold_today
               and self.data.close[0] < self.long_stoploss):
             self.order = self.close()
             self.bought_today = False
-            self.log(f"=== LONG BUY STOPLOSS HIT ===")
+            self.log(f"=== LONG BUY STOPLOSS HIT | LOSER ===")
 
         # short sell when selling candle signals and down trend
         if (not self.position and not self.bought_today and not self.sold_today
-                and self.data.open[0] > self.data.close[0]
-                and (self.data.close[-1] <= self.data.open[0]
-                     and self.data.close[-1] > self.data.close[0])
-                and (self.data.open[-1] <= self.data.open[0]
-                     and self.data.open[-1] > self.data.close[0])
-                and self.data.close[0] < self.ema):
+                and self.rsi_weekly < 40 and self.rsi_monthly < 40
+                and self.rsi < 60 and self.rsi > 40):
             self.order = self.sell()
             self.short_stoploss = self.data.high[0]  # stoploss value
             self.sold_today = True
             self.log(f"=== SHORT SELL EXECUTED ===")
 
         # short target
-        # 1.5:1
         elif (self.position and not self.bought_today and self.sold_today
-              and self.data.close[0] < self.short_target):
+              and self.rsi < 40):
             self.order = self.close()
             self.sold_today = False
             self.log(f"=== SHORT SELL TARGET HIT ===")
 
         # stoploss
-        # stoploss will be high of the selling candle
+        # stoploss will be high of the selling candle and above SMA 200
         elif (self.position and not self.bought_today and self.sold_today
               and self.data.close[0] > self.short_stoploss):
             self.order = self.close()
             self.sold_today = False
-            self.log(f"=== SHORT SELL STOPLOSS HIT ===")
+            self.log(f"=== SHORT SELL STOPLOSS HIT | LOSER ===")
 
     def start(self):
         self.opening_amount = self.broker.getvalue()
@@ -129,8 +128,8 @@ class EngulfingPattern(backtrader.Strategy):
 
 
 if __name__ == "__main__":
-    database_path_fifteen_minute = "./databases/app-minute-fifteen.db"
-    conn = sqlite3.connect(database_path_fifteen_minute)
+    database_path_daily = "./databases/app-daily.db"
+    conn = sqlite3.connect(database_path_daily)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     cursor.execute("""
@@ -151,8 +150,8 @@ if __name__ == "__main__":
             select datetime, open, high, low, close, volume
             from stock_price_minute
             where stock_id = :stock_id
-            and strftime('%H:%M:%S', datetime) >= '09:30:00' 
-            and strftime('%H:%M:%S', datetime) < '16:00:00'
+            and strftime('%Y-%m-%d', datetime) >= '2020-01-01' 
+            and strftime('%Y-%m-%d', datetime) < '2021-12-31'
             order by datetime asc
         """,
             conn,
@@ -163,7 +162,7 @@ if __name__ == "__main__":
 
         data = backtrader.feeds.PandasData(dataname=dataframe)
         cerebro.adddata(data)
-        cerebro.addstrategy(EngulfingPattern)
+        cerebro.addstrategy(FiveStarRSI)
 
         # strats = cerebro.optstrategy(OpeningRangeBreakout, num_opening_bars=[15, 30, 60])
         cerebro.addanalyzer(BasicTradeStats)
